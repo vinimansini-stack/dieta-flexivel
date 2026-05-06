@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano de Dieta Flexível</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f5f5;color:#1a1a2e;padding:12px}
+  button{font-family:inherit}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState}=React;
+
+const phases={
+  fase1:{label:"Fase 1",cal:2200,p:170,c:245,g:65,periodo:"11/05 → 07/06",sem:"Sem 1-4",def:400,color:"#2563eb",pesoEst:"~85kg"},
+  fase2:{label:"Fase 2",cal:2050,p:170,c:220,g:60,periodo:"08/06 → 05/07",sem:"Sem 5-8",def:550,color:"#7c3aed",pesoEst:"~83kg"},
+  fase3:{label:"Fase 3",cal:1900,p:165,c:195,g:56,periodo:"06/07 → 02/08",sem:"Sem 9-12",def:700,color:"#dc2626",pesoEst:"~80kg"},
+  fase4:{label:"Fase 4",cal:1750,p:165,c:170,g:52,periodo:"03/08 → 30/08",sem:"Sem 13-16",def:850,color:"#b91c1c",pesoEst:"~78kg"},
+};
+
+const getMeals=(ph)=>{
+  const arroz=ph==="fase1"?130:ph==="fase2"?115:ph==="fase3"?100:90;
+  const arrozCal=Math.round(arroz/130*182);
+  const arrozC=+(arroz/130*36.4).toFixed(1);
+  const arrozG=+(arroz/130*3.9).toFixed(1);
+  const mayo=ph==="fase1"?30:ph==="fase2"?25:ph==="fase3"?20:15;
+  const mayoCal=Math.round(mayo/50*168);
+  const mayoC=+(mayo/50*3.7).toFixed(1);
+  const mayoG=+(mayo/50*16.7).toFixed(1);
+  const macCru=ph==="fase1"?80:ph==="fase2"?75:ph==="fase3"?65:55;
+  const macCal=Math.round(macCru/100*350);
+  const macC=+(macCru/100*75).toFixed(1);
+  const macP=+(macCru/100*10).toFixed(1);
+  const macG=+(macCru/100*1.5).toFixed(1);
+
+  return{
+    cafe:{title:"Café (Pós-Treino) ~8h",icon:"☕",options:[
+      {name:"Whey + Banana + Leite",items:"1 scoop whey DUX + 1 banana + 200ml leite Piracanjuba",cal:329,p:27.2,c:37.7,g:8.5},
+      {name:"Farinha Láctea + Leite + Whey",items:"30g farinha láctea + 100ml leite + 1 scoop whey DUX com 100ml leite",cal:270,p:24.1,c:20.2,g:5.7},
+      {name:"Pão Forma + Peru + Requeijão + Whey+Leite",items:"50g pão Panco + 50g peru Sadia + 30g requeijão + 1 scoop whey com 200ml leite",cal:465,p:40.9,c:42.2,g:14.5},
+      {name:"Bisnaguinha + Requeijão + Whey+Leite",items:"3 bisnag. Panco (60g) + 30g requeijão + 1 scoop whey com 200ml leite",cal:470,p:32.9,c:49.5,g:12.5},
+      {name:"Pão de Ovo + Peru + Whey+Leite",items:"2 pães de ovo + 50g peru Sadia + 1 scoop whey com 200ml leite",cal:461,p:40.2,c:41.7,g:12.1},
+    ]},
+    almoco:{title:"Almoço ~12h",icon:"🍚",options:[
+      {name:"Arroz + Frango Grelhado + Mayo",items:arroz+"g arroz + 150g frango grelhado + "+mayo+"g maionese",cal:arrozCal+228+mayoCal,p:48,c:+(arrozC+mayoC).toFixed(1),g:+(arrozG+3.75+mayoG).toFixed(1)},
+      {name:"Arroz + Frango Desfiado + Mayo",items:arroz+"g arroz + 150g frango desfiado Swift + "+mayo+"g maionese",cal:arrozCal+165+mayoCal,p:28.5,c:+(arrozC+4.2+mayoC).toFixed(1),g:+(arrozG+3.75+mayoG).toFixed(1)},
+      {name:"Arroz + Mignon + Mayo",items:arroz+"g arroz + 170g filé mignon + "+mayo+"g maionese",cal:arrozCal+360+mayoCal,p:54.4,c:+(arrozC+mayoC).toFixed(1),g:+(arrozG+15+mayoG).toFixed(1)},
+      {name:"Macarrão "+macCru+"g cru + Atum + Queijo ralado",items:macCru+"g macarrão cru + 120g atum drenado + meia col queijo ralado Vigor",cal:macCal+147+33,p:+(macP+30+2.7).toFixed(1),c:macC,g:+(macG+3+2.4).toFixed(1)},
+      {name:"Pão Swift + Frango Grelhado + Mayo",items:"50g pão francês Swift + 150g frango grelhado + "+mayo+"g maionese",cal:120+228+mayoCal,p:51.7,c:+(25+mayoC).toFixed(1),g:+(0.5+3.75+mayoG).toFixed(1)},
+      {name:"Pão Swift + Mignon + Mayo",items:"50g pão francês Swift + 170g mignon + "+mayo+"g maionese",cal:120+360+mayoCal,p:58.1,c:+(25+mayoC).toFixed(1),g:+(0.5+15+mayoG).toFixed(1)},
+      {name:"Macarrão + Molho Rosé + Isca Frango",items:macCru+"g macarrão cru + 50g molho tomate + 50g creme leite + iscas frango Swift (~130g)",cal:macCal+16+122+205,p:+(macP+0.5+1.4+18.3).toFixed(1),c:+(macC+3+2.6+13.9).toFixed(1),g:+(macG+0.2+11.7+8.3).toFixed(1)},
+      {name:"Pão Alho + Coxinha Air Fryer (20%)",items:"80g pão alho SM + 3 coxinhas Swift air fryer",cal:232+139,p:7.7,c:51.2,g:15.1},
+    ]},
+    lanche:{title:"Lanche ~16h",icon:"🥤",options:[
+      {name:"Pipoca + Coca Zero",items:"40g milho pipoca estourado + sal + Coca Zero",cal:154,p:4,c:30,g:2},
+      {name:"Leite + Nescal",items:"200ml leite Piracanjuba + 25g Nescal",cal:214,p:7.2,c:30.5,g:6.8},
+      {name:"2x Danoninho",items:"2 Danoninho petit suisse (80g)",cal:78,p:5,c:9.2,g:2.4},
+      {name:"Iogurte Coco Itambé",items:"1 iogurte coco Itambé (170g)",cal:147,p:5,c:20,g:3},
+      {name:"Iogurte Morango Danone",items:"1 iogurte morango Danone (170g)",cal:147,p:5,c:20,g:3},
+      {name:"Açaí + Leite Ninho",items:"100g açaí Lips + 10g leite ninho",cal:160,p:1.3,c:28.3,g:4.3},
+      {name:"Misto Quente (1 un)",items:"50g pão Panco + 50g peru + 20g mussarela Tirolez + 10g mayo",cal:292,p:21.9,c:25.5,g:10.4},
+      {name:"Pão Forma + Requeijão",items:"50g pão forma Panco + 30g requeijão Catupiry",cal:178,p:7.7,c:25.5,g:5.1},
+    ]},
+    janta:{title:"Janta ~20h",icon:"🌙",options:[
+      {name:"Arroz + Frango Grelhado + Mayo",items:arroz+"g arroz + 130g frango grelhado + "+mayo+"g maionese",cal:arrozCal+198+mayoCal,p:41.6,c:+(arrozC+mayoC).toFixed(1),g:+(arrozG+3.25+mayoG).toFixed(1)},
+      {name:"Arroz + Frango Desfiado + Mayo",items:arroz+"g arroz + 150g frango desfiado + "+mayo+"g maionese",cal:arrozCal+165+mayoCal,p:28.5,c:+(arrozC+4.2+mayoC).toFixed(1),g:+(arrozG+3.75+mayoG).toFixed(1)},
+      {name:"Macarrão "+macCru+"g cru + Atum + Queijo ralado",items:macCru+"g macarrão cru + 120g atum drenado + meia col queijo Vigor",cal:macCal+147+33,p:+(macP+30+2.7).toFixed(1),c:macC,g:+(macG+3+2.4).toFixed(1)},
+      {name:"Arroz + Mignon + Mayo",items:arroz+"g arroz + 170g mignon + "+mayo+"g maionese",cal:arrozCal+360+mayoCal,p:54.4,c:+(arrozC+mayoC).toFixed(1),g:+(arrozG+15+mayoG).toFixed(1)},
+      {name:"Macarrão + Molho Rosé + Isca Frango",items:macCru+"g macarrão cru + 50g molho tomate + 50g creme leite + iscas frango Swift",cal:macCal+16+122+205,p:+(macP+0.5+1.4+18.3).toFixed(1),c:+(macC+3+2.6+13.9).toFixed(1),g:+(macG+0.2+11.7+8.3).toFixed(1)},
+      {name:"Misto Quente (2 un)",items:"100g pão Panco + 100g peru + 40g mussarela + 20g mayo",cal:584,p:43.8,c:51,g:20.8},
+    ]},
+    docinho:{title:"Docinho Pós-Refeição",icon:"🍫",options:[
+      {name:"Doce de Leite Aviação (20g)",items:"1 colher (20g) doce de leite Aviação",cal:69,p:1.4,c:12,g:1.5},
+      {name:"2x Bananinha Zero",items:"2 bananinhas BanaBrazil zero açúcar",cal:114,p:1,c:26,g:0},
+      {name:"1x Bananinha Zero",items:"1 bananinha BanaBrazil zero (23g)",cal:57,p:0.5,c:13,g:0},
+      {name:"Mini Açaí + Ninho",items:"75g açaí Lips + 5g leite ninho",cal:109,p:0.7,c:19.9,g:2.7},
+      {name:"Farinha Láctea + Leite",items:"30g farinha láctea + 100ml leite",cal:89,p:4,c:10.1,g:3.5},
+      {name:"1x Danoninho",items:"1 Danoninho petit suisse (40g)",cal:39,p:2.5,c:4.6,g:1.2},
+    ]},
+    livre:{title:"🔥 Ref. Livre (1x/semana, troca almoço OU janta)",icon:"🍔",options:[
+      {name:"Madero Super",items:"1 Burger Madero Super + Coca Zero",cal:969,p:47,c:43,g:76},
+      {name:"2x Cheeseburger MC",items:"2 Cheeseburgers McDonald's + Coca Zero",cal:600,p:32,c:60,g:26},
+      {name:"½ Pizza Sadia Lombo",items:"½ pizza Sadia lombo (~231g) + Coca Zero",cal:565,p:24.6,c:63,g:23.7},
+      {name:"Pão Alho + Coxinhas Air Fryer",items:"80g pão alho SM + 4 coxinhas Swift air fryer (~113g)",cal:417,p:8.7,c:59.5,g:16.1},
+    ]},
+  };
+};
+
+const MacroBar=({label,val,max,color})=>(
+  React.createElement("div",{style:{marginBottom:5}},
+    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:1,color:"#666"}},
+      React.createElement("span",null,label),
+      React.createElement("span",{style:{fontWeight:600,color:"#1a1a2e"}},val+"g")
+    ),
+    React.createElement("div",{style:{height:5,background:"#edf2f7",borderRadius:3,overflow:"hidden"}},
+      React.createElement("div",{style:{width:Math.min((val/max)*100,100)+"%",height:"100%",background:color,borderRadius:3,transition:"width 0.3s"}})
+    )
+  )
+);
+
+const Opt=({o,sel,onSel,accent})=>(
+  React.createElement("div",{onClick:onSel,style:{padding:"11px 13px",borderRadius:10,cursor:"pointer",transition:"all 0.15s",marginBottom:7,border:sel?"2px solid "+accent:"1px solid #e2e8f0",background:sel?accent+"08":"#fff"}},
+    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}},
+      React.createElement("span",{style:{fontWeight:600,fontSize:13}},(sel?"✓ ":"")+o.name),
+      React.createElement("span",{style:{fontSize:12,fontWeight:700,color:accent}},o.cal+" kcal")
+    ),
+    React.createElement("p",{style:{fontSize:11,color:"#666",margin:0,lineHeight:1.35}},o.items),
+    React.createElement("div",{style:{display:"flex",gap:10,marginTop:5,fontSize:10.5}},
+      React.createElement("span",{style:{color:"#ef4444"}},"P:"+o.p+"g"),
+      React.createElement("span",{style:{color:"#3b82f6"}},"C:"+o.c+"g"),
+      React.createElement("span",{style:{color:"#f59e0b"}},"G:"+o.g+"g")
+    )
+  )
+);
+
+function App(){
+  const[ph,setPh]=useState("fase1");
+  const[sel,setSel]=useState({});
+  const[showRef,setShowRef]=useState(false);
+  const[showStrat,setShowStrat]=useState(false);
+  const p=phases[ph];
+  const meals=getMeals(ph);
+
+  const toggle=(m,i)=>setSel(s=>({...s,[ph+"-"+m]:s[ph+"-"+m]===i?undefined:i}));
+
+  const tot=(()=>{
+    let c=0,pr=0,ca=0,g=0;
+    Object.entries(meals).forEach(([k,m])=>{
+      const i=sel[ph+"-"+k];
+      if(i!==undefined&&m.options[i]){const o=m.options[i];c+=o.cal;pr+=o.p;ca+=o.c;g+=o.g;}
+    });
+    return{cal:Math.round(c),p:+(pr.toFixed(1)),c:+(ca.toFixed(1)),g:+(g.toFixed(1))};
+  })();
+
+  const has=tot.cal>0;
+  const over=tot.cal>p.cal;
+
+  const ref=[
+    ["Arroz cozido","130g",182,0,36.4,3.9],["Frango grelhado","100g",152,32,0,2.5],
+    ["Frango desfiado","100g",110,19,2.8,2.5],["Mignon","170g",360,54.4,0,15],
+    ["Atum óleo (dren)","120g",147,30,0,3],["Mayo Hellmans","50g/30g/20g","168/101/67","—","3.7/2.2/1.5","16.7/10/6.7"],
+    ["Requeijão","30g",50,3.5,1.5,3.4],["Mussarela Tirolez","30g",80,7,0,5.5],
+    ["Whey DUX","30g",122,20,5.5,2.2],["Leite Pirac.","200ml",118,6.2,9.2,6],
+    ["Nescal","25g",96,1,21.3,0.8],["Leite Ninho","15g",71,2,8,3.5],
+    ["Açaí Lips","150g",170,0,34.5,3],["Banana","100g",89,1,23,0.3],
+    ["Bisnaguinha","1un(20g)",60,1.6,11.6,0.8],["Pão forma","50g",128,4.2,24,1.7],
+    ["Pão ovo","1un",87,2,13.5,2.7],["Pão Swift","50g",120,3.7,25,0.5],
+    ["Peru Sadia","50g",47,10,0,0.7],["Pão alho SM","80g",232,4.7,26.2,12.1],
+    ["Far. láctea","30g",30,0.9,5.5,0.5],["Bat. palha","20g",112,1,8.8,7.9],
+    ["Macarrão CRU","80g",280,8,60,1.2],["Q. ralado Vigor","7g(½col)",33,2.7,0,2.4],
+    ["Creme leite","100g(½cx)",243,2.7,5.2,23.4],["Pipoca","40g",154,4,30,2],
+    ["Doce leite Av.","20g",69,1.4,12,1.5],["Bananinha zero","1un",57,0.5,13,0],
+    ["Danoninho","1un(40g)",39,2.5,4.6,1.2],["Iog. coco Itambé","170g",147,5,20,3],
+    ["Coxinha Swift AF","~3un(85g)",139,3,25,3],["Isca frango Swift","~5un(130g)",205,18.3,13.9,8.3],
+    ["Madero Super","1un",969,47,43,76],["Cheeseburger MC","1un",300,16,30,13],
+    ["Pizza Sadia","½",565,24.6,63,23.7],
+  ];
+
+  const S=(tag,props,...ch)=>React.createElement(tag,props,...ch);
+  const D=(props,...ch)=>S("div",props,...ch);
+  const Sp=(props,...ch)=>S("span",props,...ch);
+
+  return D({style:{maxWidth:640,margin:"0 auto",padding:"0 4px"}},
+
+    // Header
+    D({style:{textAlign:"center",marginBottom:14}},
+      S("h1",{style:{fontSize:19,fontWeight:800,margin:"0 0 2px",letterSpacing:-0.5}},"Plano de Dieta Flexível"),
+      S("p",{style:{fontSize:12,color:"#666",margin:0}},"87kg → 75kg | BF ~20% → ~10% | ~6-8 meses"),
+      S("p",{style:{fontSize:10,color:"#059669",margin:"3px 0 0",fontWeight:600}},"✅ Macros calibrados | Calorias iguais todo dia | Início 11/05")
+    ),
+
+    // Strategy
+    D({onClick:()=>setShowStrat(!showStrat),style:{background:"linear-gradient(135deg,#1e293b,#334155)",color:"#fff",borderRadius:12,padding:13,marginBottom:14,cursor:"pointer"}},
+      D({style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+        Sp({style:{fontWeight:700,fontSize:13}},"📊 Estratégia & Cronograma"),
+        Sp({style:{fontSize:14,transform:showStrat?"rotate(180deg)":"rotate(0)",transition:"transform 0.2s",display:"inline-block"}},"▾")
+      ),
+      D({style:{fontSize:11,marginTop:6,lineHeight:1.6}},
+        D(null,"TDEE: ",S("strong",null,"2.600 kcal")," (home office) | Perda: ",S("strong",null,"~0.4-0.5 kg/sem"))
+      ),
+      showStrat && D({style:{marginTop:10,fontSize:11,lineHeight:1.8,borderTop:"1px solid rgba(255,255,255,0.15)",paddingTop:8}},
+        ...Object.entries(phases).map(([k,f])=>
+          D({key:k,style:{display:"flex",gap:6,alignItems:"center",marginBottom:3}},
+            Sp({style:{background:f.color,width:8,height:8,borderRadius:2,flexShrink:0}}),
+            Sp(null,S("strong",null,f.label),": "+f.cal+"kcal | "+f.periodo+" | déficit "+f.def+"kcal | peso est. "+f.pesoEst)
+          )
+        ),
+        D({style:{marginTop:8,opacity:0.9,fontSize:10.5}},
+          D(null,S("strong",null,"Mudar fase:")," média semanal estagnada 2 semanas → próxima fase"),
+          D(null,S("strong",null,"Perdendo > 0.7kg/sem:")," suba 100kcal"),
+          D(null,S("strong",null,"Diet break:")," a cada 8-12 sem, volte pra 2.600 por 1-2 semanas"),
+          D(null,S("strong",null,"Ref. livre:")," 1x/sem, troca almoço OU janta, resto normal"),
+          D(null,S("strong",null,"80/20:")," 80% comida limpa, 20% besteira — encaixado nas opções")
+        )
+      )
+    ),
+
+    // Stats
+    D({style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:14,textAlign:"center"}},
+      ...[["TDEE","2.600"],["Déficit",""+p.def],["Meta",""+p.cal]].map(([l,v],i)=>
+        D({key:i,style:{background:"#fff",borderRadius:10,padding:"8px 6px",border:"1px solid #e2e8f0"}},
+          D({style:{fontSize:10,color:"#888"}},l),
+          D({style:{fontSize:17,fontWeight:700}},v),
+          D({style:{fontSize:9,color:"#888"}},"kcal")
+        )
+      )
+    ),
+
+    // Phase tabs
+    D({style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:4,marginBottom:14}},
+      ...Object.entries(phases).map(([k,f])=>
+        S("button",{key:k,onClick:()=>setPh(k),style:{padding:"7px 3px",borderRadius:10,border:"none",cursor:"pointer",background:ph===k?f.color:"#fff",color:ph===k?"#fff":"#1a1a2e",fontWeight:ph===k?700:500,fontSize:10.5,boxShadow:ph===k?"0 2px 6px "+f.color+"40":"0 1px 2px rgba(0,0,0,0.06)"}},
+          D({style:{fontWeight:700}},f.label),
+          D({style:{fontSize:13,margin:"1px 0"}},""+f.cal),
+          D({style:{fontSize:8.5,opacity:0.8}},f.periodo.split("→")[0].trim())
+        )
+      )
+    ),
+
+    // Phase macros
+    D({style:{background:"#fff",borderRadius:12,padding:12,border:"1px solid #e2e8f0",marginBottom:14}},
+      D({style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}},
+        Sp({style:{fontWeight:700,fontSize:14}},"🎯 "+p.label+": "+p.cal+" kcal/dia"),
+        Sp({style:{fontSize:10,color:"#888"}},p.sem+" | "+p.periodo)
+      ),
+      S(MacroBar,{label:"Proteína",val:p.p,max:200,color:"#ef4444"}),
+      S(MacroBar,{label:"Carboidrato",val:p.c,max:280,color:"#3b82f6"}),
+      S(MacroBar,{label:"Gordura",val:p.g,max:85,color:"#f59e0b"})
+    ),
+
+    // Tracker
+    has && D({style:{background:p.color+"08",borderRadius:12,padding:11,border:"1px solid "+p.color+"30",marginBottom:14,position:"sticky",top:0,zIndex:10,backdropFilter:"blur(10px)"}},
+      D({style:{fontSize:12,fontWeight:700,marginBottom:5,color:p.color}},"📝 "+tot.cal+" / "+p.cal+" kcal"),
+      D({style:{display:"flex",gap:12,fontSize:11}},
+        Sp({style:{color:"#ef4444"}},"P:"+tot.p+"g",Sp({style:{color:"#bbb",fontSize:9}},"/"+p.p)),
+        Sp({style:{color:"#3b82f6"}},"C:"+tot.c+"g",Sp({style:{color:"#bbb",fontSize:9}},"/"+p.c)),
+        Sp({style:{color:"#f59e0b"}},"G:"+tot.g+"g",Sp({style:{color:"#bbb",fontSize:9}},"/"+p.g))
+      ),
+      D({style:{height:4,background:"#edf2f7",borderRadius:2,marginTop:6,overflow:"hidden"}},
+        D({style:{width:Math.min((tot.cal/p.cal)*100,100)+"%",height:"100%",background:over?"#ef4444":p.color,borderRadius:2,transition:"width 0.3s"}})
+      ),
+      D({style:{fontSize:9,color:over?"#ef4444":"#888",marginTop:3,textAlign:"right",fontWeight:over?600:400}},
+        over?"⚠️ "+(tot.cal-p.cal)+"kcal acima":"Restam "+(p.cal-tot.cal)+"kcal"
+      )
+    ),
+
+    // Meals
+    ...Object.entries(meals).map(([mk,m])=>
+      D({key:mk,style:{marginBottom:18}},
+        D({style:{display:"flex",alignItems:"center",gap:7,marginBottom:7,paddingBottom:5,borderBottom:"1px solid #e2e8f0"}},
+          Sp({style:{fontSize:18}},m.icon),
+          S("h3",{style:{margin:0,fontSize:13,fontWeight:700}},m.title)
+        ),
+        mk==="livre" && D({style:{fontSize:10,color:"#d97706",marginBottom:6,fontStyle:"italic"}},"1x/semana — substitui almoço OU janta"),
+        D({style:{fontSize:10,color:"#888",marginBottom:6}},"Clique para selecionar:"),
+        ...m.options.map((o,i)=>S(Opt,{key:i,o,accent:p.color,sel:sel[ph+"-"+mk]===i,onSel:()=>toggle(mk,i)}))
+      )
+    ),
+
+    // Tips
+    D({style:{background:"#fff",borderRadius:12,padding:13,border:"1px solid #e2e8f0",marginBottom:14}},
+      D({style:{fontWeight:700,fontSize:13,marginBottom:7}},"💡 Regras"),
+      D({style:{fontSize:11,lineHeight:1.75,color:"#555"}},
+        ...["💧 Água: mín 3L/dia","🏋️ Treino jejum 7h → café pós-treino","🥩 Proteína ~2g/kg nas refeições","🥤 Coca Zero: 0kcal, liberada",
+        "📏 Pese TUDO na balança","⚖️ Peso: toda manhã jejum, média semanal","📉 Estagnação 2sem → próxima fase",
+        "🔄 Diet break 8-12sem: volta 2.600kcal 1-2sem","🍔 Livre 1x/sem: troca almoço OU janta",
+        "⚠️ Mayo: pese! 50g=168kcal","🐟 Atum: só com macarrão, sem molho tomate, com queijo ralado"
+        ].map((t,i)=>D({key:i},t))
+      )
+    ),
+
+    // Ref table
+    D({style:{background:"#fff",borderRadius:12,padding:13,border:"1px solid #e2e8f0",marginBottom:14}},
+      D({onClick:()=>setShowRef(!showRef),style:{fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",justifyContent:"space-between"}},
+        Sp(null,"📋 Tabela de Referência"),
+        Sp({style:{fontSize:16,transition:"transform 0.2s",transform:showRef?"rotate(180deg)":"rotate(0)",display:"inline-block"}},"▾")
+      ),
+      showRef && D({style:{overflowX:"auto",marginTop:8}},
+        S("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:10}},
+          S("thead",null,S("tr",{style:{borderBottom:"2px solid #e2e8f0",textAlign:"left"}},
+            ...["Alimento","Porção","Kcal","P","C","G"].map((h,i)=>
+              S("th",{key:i,style:{padding:"5px 3px",fontWeight:700,color:i===3?"#ef4444":i===4?"#3b82f6":i===5?"#f59e0b":"#1a1a2e"}},h)
+            )
+          )),
+          S("tbody",null,...ref.map(([f,por,cal,pp,c,g],i)=>
+            S("tr",{key:i,style:{borderBottom:"1px solid #f1f5f9"}},
+              S("td",{style:{padding:"4px 3px"}},f),
+              S("td",{style:{padding:"4px 3px"}},por),
+              S("td",{style:{padding:"4px 3px",fontWeight:600}},""+cal),
+              S("td",{style:{padding:"4px 3px",color:"#ef4444"}},""+pp),
+              S("td",{style:{padding:"4px 3px",color:"#3b82f6"}},""+c),
+              S("td",{style:{padding:"4px 3px",color:"#f59e0b"}},""+g)
+            )
+          ))
+        )
+      )
+    ),
+
+    D({style:{textAlign:"center",fontSize:9,color:"#888",padding:"6px 0 18px",lineHeight:1.5}},
+      "⚠️ Consulte um nutricionista. Valores aproximados. Média semanal é o que importa."
+    )
+  );
+}
+
+ReactDOM.render(React.createElement(App),document.getElementById("root"));
+</script>
+</body>
+</html>
